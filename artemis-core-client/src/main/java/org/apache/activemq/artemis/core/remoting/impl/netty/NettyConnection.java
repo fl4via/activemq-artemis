@@ -19,7 +19,9 @@ package org.apache.activemq.artemis.core.remoting.impl.netty;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoop;
+import io.netty.channel.FileRegion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
@@ -357,6 +360,37 @@ public class NettyConnection implements Connection {
 
    private Object getFileObject(RandomAccessFile raf, FileChannel fileChannel, long offset, int dataSize) {
       if (channel.pipeline().get(SslHandler.class) == null) {
+         /*FileRegion fileRegion = new NonClosingDefaultFileRegion(fileChannel, offset, dataSize);
+
+         final ActiveMQBuffer buffer = createTransportBuffer(dataSize);
+         try {
+            long transferTo = fileRegion.transferTo(new WritableByteChannel() {
+               @Override public int write(ByteBuffer src) throws IOException {
+                  int remaining = src.remaining();
+                  try {
+                     buffer.writeBytes(src);
+                  } catch (Exception e) {
+                     e.printStackTrace();
+                  }
+                  return remaining - src.remaining();
+               }
+
+               @Override public boolean isOpen() {
+                  return true;
+               }
+
+               @Override public void close() throws IOException {
+
+               }
+            }, 0);
+            System.out.println("TRANSFERRED TO BUFFER: " + transferTo);
+            buffer.writerIndex((int) transferTo);
+            System.out.println("THIS IS BUFFER: " + buffer);
+         } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+         }
+         return buffer.byteBuf();*/
          return new NonClosingDefaultFileRegion(fileChannel, offset, dataSize);
       } else {
          try {
