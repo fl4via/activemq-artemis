@@ -16,7 +16,13 @@
  */
 package org.apache.activemq.artemis.core.protocol;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import io.netty.buffer.ByteBuf;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.buffers.impl.ChannelBufferWrapper;
 import org.apache.activemq.artemis.core.message.impl.CoreMessage;
 import org.apache.activemq.artemis.core.protocol.core.CoreRemotingConnection;
 import org.apache.activemq.artemis.core.protocol.core.Packet;
@@ -119,8 +125,22 @@ public class ServerPacketDecoder extends ClientPacketDecoder {
       return sessionConsumerFlowCreditMessage;
    }
 
+   private ByteBuf buffer;
+
    @Override
-   public Packet decode(final ActiveMQBuffer in, CoreRemotingConnection connection) {
+   public Packet decode(ActiveMQBuffer in, CoreRemotingConnection connection) {
+      if (buffer != null) {
+         in.readerIndex(0);
+         buffer.writeBytes(in.byteBuf());
+         in = new ChannelBufferWrapper(buffer);
+         in.readerIndex(4);
+         buffer = null;
+         System.out.println("HERE");
+      }
+      if (in.readableBytes() == 0) {
+         buffer = in.byteBuf().copy();
+         return null;
+      }
       final byte packetType = in.readByte();
       //optimized for the most common cases: hottest and commons methods will be inlined and this::decode too due to the byte code size
       switch (packetType) {

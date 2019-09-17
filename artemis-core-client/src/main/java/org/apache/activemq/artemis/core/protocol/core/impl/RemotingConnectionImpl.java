@@ -375,6 +375,9 @@ public class RemotingConnectionImpl extends AbstractRemotingConnection implement
    public void bufferReceived(final Object connectionID, final ActiveMQBuffer buffer) {
       try {
          final Packet packet = packetDecoder.decode(buffer, this);
+         if (packet == null) {
+            return;
+         }
 
          if (logger.isTraceEnabled()) {
             logger.trace("RemotingConnectionID=" + getID() + " handling packet " + packet);
